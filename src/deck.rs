@@ -3,28 +3,28 @@ use std::fmt;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Card {
-    pub value: i8,
+    pub name: String,
     suit: char,
 }
 
 impl Card {
-    pub fn value_to_name(&self) -> &str {
-        match self.value {
-            11 => "ACE",
-            2 => "TWO",
-            3 => "THREE",
-            4 => "FOUR",
-            5 => "FIVE",
-            6 => "SIX",
-            7 => "SEVEN",
-            8 => "EIGHT",
-            9 => "NINE",
-            10 => "TEN",
-            12 => "JACK",
-            13 => "QUEEN",
-            14 => "KING",
+    pub fn name_to_value(&self) -> i8 {
+        match self.name.as_str() {
+            "ACE" => 11,
+            "TWO" => 2,
+            "THREE" => 3,
+            "FOUR" => 4,
+            "FIVE" => 5,
+            "SIX" => 6,
+            "SEVEN" => 7,
+            "EIGHT" => 8,
+            "NINE" => 9,
+            "TEN" => 10,
+            "JACK" => 12,
+            "QUEEN" => 13,
+            "KING" => 14,
             _ => panic!("Not valid"),
         }
     }
@@ -32,7 +32,7 @@ impl Card {
 
 impl fmt::Display for Card {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} of {}", self.value_to_name(), self.suit)
+        write!(f, "{} of {}", self.name, self.suit)
     }
 }
 
@@ -43,13 +43,16 @@ pub struct Deck {
 impl Deck {
     pub fn new() -> Deck {
         const SUITS: [char; 4] = ['♥', '♦', '♣', '♠'];
+        const CARD_NAMES: [&str; 13] = [
+            "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK",
+            "QUEEN", "KING",
+        ];
         let mut deck: Vec<Card> = Vec::new();
 
         for &suit in SUITS.iter() {
-            for card_num in 2..=14 {
-                let card_value = if card_num < 12 { card_num } else { 10 };
+            for &card_name in CARD_NAMES.iter() {
                 deck.push(Card {
-                    value: card_value,
+                    name: card_name.to_string(),
                     suit: suit,
                 });
             }

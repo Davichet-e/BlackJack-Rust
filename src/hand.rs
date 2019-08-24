@@ -44,16 +44,16 @@ impl Hand {
 
     pub fn deal_card(&mut self, deck: &mut Deck) {
         let card: Card = deck.deal_card();
-        self.check_if_ace(card);
-        self.cards.push(card);
-        self.update_points(card);
+        self.check_if_ace(card.clone());
+        self.cards.push(card.clone());
+        self.update_points(card.clone());
         if self.check_if_lost() {
             self.points = 0;
         }
     }
 
     fn check_if_ace(&mut self, card: Card) {
-        if card.value == 11 {
+        if card.name == "ACE" {
             self.aces += 1;
         }
     }
@@ -70,11 +70,11 @@ impl Hand {
     }
 
     fn update_points(&mut self, card: Card) {
-        self.points += card.value;
+        self.points += card.name_to_value();
         self.check_ace_points();
     }
 
     pub fn calculate_points(cards: &Vec<Card>) -> i8 {
-        cards.iter().fold(0, |acc, card| acc + card.value)
+        cards.iter().fold(0, |acc, card| acc + card.name_to_value())
     }
 }

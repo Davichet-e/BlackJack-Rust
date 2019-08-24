@@ -127,7 +127,7 @@ fn player_win_or_lose(player: &Player) -> bool {
             result = true;
         }
         0 => {
-            println!("BUST.\n\t\t\t\tI'm afraid you lose this game :(\n");
+            println!("BUST.\nI'm afraid you lose this game :(\n");
             result = true;
         }
         _ => (),
