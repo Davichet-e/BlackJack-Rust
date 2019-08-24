@@ -1,10 +1,11 @@
 use crate::{Card, Deck};
 use std::fmt;
 
+#[derive(Clone)]
 pub struct Hand {
     pub cards: Vec<Card>,
     pub points: i8,
-    aces: i8,
+    pub aces: i8,
 }
 
 impl fmt::Display for Hand {
@@ -17,6 +18,15 @@ impl fmt::Display for Hand {
                 .map(|card| card.to_string())
                 .collect::<Vec<String>>()
                 .join(", ")
+                + format!(
+                    " ({} points)",
+                    if self.points != 0 {
+                        self.points.to_string()
+                    } else {
+                        "> 21".to_string()
+                    }
+                )
+                .as_str()
         )
     }
 }
@@ -46,7 +56,7 @@ impl Hand {
         let card: Card = deck.deal_card();
         self.check_if_ace(card.clone());
         self.cards.push(card.clone());
-        self.update_points(card.clone());
+        self.update_points();
         if self.check_if_lost() {
             self.points = 0;
         }
@@ -69,8 +79,8 @@ impl Hand {
         }
     }
 
-    fn update_points(&mut self, card: Card) {
-        self.points += card.name_to_value();
+    fn update_points(&mut self) {
+        self.points = Hand::calculate_points(&self.cards);
         self.check_ace_points();
     }
 

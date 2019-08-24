@@ -21,10 +21,7 @@ impl Card {
             "SEVEN" => 7,
             "EIGHT" => 8,
             "NINE" => 9,
-            "TEN" => 10,
-            "JACK" => 12,
-            "QUEEN" => 13,
-            "KING" => 14,
+            "TEN" | "JACK" | "QUEEN" | "KING" => 10,
             _ => panic!("Not valid"),
         }
     }
@@ -41,20 +38,21 @@ pub struct Deck {
 }
 
 impl Deck {
-    pub fn new() -> Deck {
+    pub fn new(n_decks: usize) -> Deck {
         const SUITS: [char; 4] = ['♥', '♦', '♣', '♠'];
         const CARD_NAMES: [&str; 13] = [
             "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK",
             "QUEEN", "KING",
         ];
         let mut deck: Vec<Card> = Vec::new();
-
-        for &suit in SUITS.iter() {
-            for &card_name in CARD_NAMES.iter() {
-                deck.push(Card {
-                    name: card_name.to_string(),
-                    suit: suit,
-                });
+        for _ in 0..n_decks {
+            for &suit in SUITS.iter() {
+                for &card_name in CARD_NAMES.iter() {
+                    deck.push(Card {
+                        name: card_name.to_string(),
+                        suit: suit,
+                    });
+                }
             }
         }
         let mut rng = thread_rng();
@@ -64,17 +62,10 @@ impl Deck {
     }
 
     pub fn deal_card(&mut self) -> Card {
-        if self.cards.is_empty() {
-            self.initialize_deck()
-        }
         self.cards.pop().expect("DECK EMPTY!")
     }
 
     pub fn get_initial_cards(&mut self) -> Vec<Card> {
         vec![self.deal_card(), self.deal_card()]
-    }
-
-    fn initialize_deck(&mut self) {
-        *self = Deck::new();
     }
 }
