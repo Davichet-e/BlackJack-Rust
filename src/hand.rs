@@ -14,8 +14,8 @@ impl fmt::Display for Hand {
             "{}",
             self.cards
                 .iter()
-                .map(|card| card.value_to_name())
-                .collect::<Vec<&str>>()
+                .map(|card| card.to_string())
+                .collect::<Vec<String>>()
                 .join(", ")
         )
     }
