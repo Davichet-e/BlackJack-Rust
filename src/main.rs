@@ -167,14 +167,18 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
         player = player,
         actual_money = player.actual_money
     );
-
+    let player_points = Hand::calculate_points(&player.first_hand().cards);
     ask_player_bet(player);
-
     println!(
         "Your cards are:\n{} and {} ({} points)\n",
         player.first_hand().cards[0],
         player.first_hand().cards[1],
-        Hand::calculate_points(&player.first_hand().cards)
+        // If the initial cards of the player are 2 aces, display correctly the points
+        if player_points != 22 {
+            player_points
+        } else {
+            12
+        }
     );
     let mut has_splitted = false;
     for i in 0..2 {
@@ -271,17 +275,18 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
 
     for player in players.iter_mut() {
         for i in 0..2 {
-            if i == 1 && player.hands.1.is_none() {
+            let hand_splitted = player.hands.1.clone();
+            if i == 1 && hand_splitted.is_none() {
                 break;
             }
             let player_points = if i == 0 {
                 player.hands.0.points
             } else {
-                player.hands.1.clone().unwrap().points
+                hand_splitted.unwrap().points
             };
             if player_points == 21 || player_points > dealer_points {
                 println!(
-                    "{player} (#{hand_index}) won {money} :)\n",
+                    "{player} (#{hand_index} hand) won {money} :)\n",
                     player = player,
                     hand_index = i + 1,
                     money = player.actual_bet * 2
