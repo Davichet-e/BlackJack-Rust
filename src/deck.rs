@@ -38,7 +38,7 @@ pub struct Deck {
 }
 
 impl Deck {
-    pub fn new(n_decks: usize) -> Deck {
+    pub fn new(n_decks: u8) -> Deck {
         const SUITS: [char; 4] = ['♥', '♦', '♣', '♠'];
         const CARD_NAMES: [&str; 13] = [
             "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK",

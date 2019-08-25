@@ -13,16 +13,14 @@ fn main() {
     println!("Welcome to BlackJack!\n");
 
     let mut players: Vec<Player> = Vec::new();
-    let n_of_decks: usize;
-    loop {
+    let n_of_decks: u8 = loop {
         match ask_user("How many decks do you wanna use? (4-8)")
             .trim()
-            .parse::<usize>()
+            .parse()
         {
             Ok(val) => {
                 if val >= 4 && val <= 8 {
-                    n_of_decks = val;
-                    break;
+                    break val;
                 } else {
                     println!("The number of decks must be between 4 and 8");
                 }
@@ -32,7 +30,7 @@ fn main() {
                 continue;
             }
         }
-    }
+    };
     let mut deck = Deck::new(n_of_decks);
     let mut dealer_hand = Hand::new(&mut deck);
 
@@ -158,7 +156,7 @@ fn hand_win_or_lose(hand: Hand) -> bool {
 }
 
 fn check_if_yes(user_decision: &str) -> bool {
-    ["y", "yes", "1", "true"].contains(&user_decision.trim().to_lowercase().as_str())
+    ["y", "yes", "1", "true"].contains(&user_decision.to_lowercase().trim())
 }
 
 fn player_turn(player: &mut Player, deck: &mut Deck) {
@@ -193,6 +191,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 println!("Your cards are: {}", hand.clone());
             }
             match ask_user("What do you want to do?\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender")
+                .to_lowercase()
                 .trim()
             {
                 "hit" | "h" => {
