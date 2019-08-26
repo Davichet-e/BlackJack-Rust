@@ -138,7 +138,7 @@ fn ask_player_bet(player: &mut Player) {
     }
 }
 
-fn hand_win_or_lose(hand: Hand) -> bool {
+fn hand_win_or_lose(hand: &Hand) -> bool {
     let hand_points = hand.points;
 
     match hand_points {
@@ -185,10 +185,10 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
         } else {
             player.hands.1.clone().unwrap()
         };
-        while !hand_win_or_lose(hand.clone()) {
+        while !hand_win_or_lose(&hand) {
             if has_splitted {
                 println!("(Hand #{})", i + 1);
-                println!("Your cards are: {}", hand.clone());
+                println!("Your cards are: {}", hand);
             }
             match ask_user("What do you want to do?\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender")
                 .to_lowercase()
@@ -199,6 +199,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     println!(
                         "Now, the cards of your {} hand are: {}",
                         if i == 0 { "first" } else { "second" },
+                        // Update the hand
                         if i == 0 {
                             player.hands.0.clone()
                         } else {
@@ -243,7 +244,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 player.hands.1.clone().unwrap()
             };
         }
-        if player.hands.1.is_none() {
+        if !has_splitted {
             break;
         }
     }
