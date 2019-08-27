@@ -289,13 +289,13 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
                 hand_splitted.unwrap().points
             };
             if player_points == 21 || player_points > dealer_points {
+                let money_earned: i32 = player.win();
                 println!(
                     "{player} (#{hand_index} hand) won {money} €:)\n",
                     player = player,
                     hand_index = i + 1,
-                    money = player.actual_bet * 2
+                    money = money_earned
                 );
-                player.win();
             } else if player_points == 0 || player_points < dealer_points {
                 println!(
                     "{}, your #{} hand lost against the dealer :(\n",

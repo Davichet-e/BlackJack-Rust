@@ -97,8 +97,18 @@ impl Player {
         }
         false
     }
-    pub fn win(&mut self) {
+    pub fn win(&mut self) -> i32 {
+        let money_before: i32 = self.actual_money;
         self.actual_money += self.actual_bet;
+
+        // If has a BlackJack, sums 1.5 times the actual bet, otherwise just 1 time
+        if Hand::has_blackjack(&self.hands.0) {
+            self.actual_money += self.actual_bet / 2;
+        }
+        if self.hands.1.is_some() && Hand::has_blackjack(self.hands.1.as_ref().unwrap()) {
+            self.actual_money += self.actual_bet / 2;
+        }
+        self.actual_money - money_before
     }
     pub fn lose(&mut self) {
         self.actual_money -= self.actual_bet;
