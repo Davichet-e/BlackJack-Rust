@@ -62,7 +62,7 @@ impl Deck {
     }
 
     pub fn deal_card(&mut self) -> Card {
-        self.cards.pop().expect("DECK EMPTY!")
+        self.cards.pop().expect("DECK EMPTY, GAME OVER!")
     }
 
     pub fn get_initial_cards(&mut self) -> Vec<Card> {

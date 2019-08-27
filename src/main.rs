@@ -139,18 +139,22 @@ fn ask_player_bet(player: &mut Player) {
 }
 
 fn hand_win_or_lose(hand: &Hand) -> bool {
-    let hand_points = hand.points;
-
-    match hand_points {
-        21 => {
-            println!("YOU GOT 21 POINTS!");
-            return true;
+    if Hand::has_blackjack(hand) {
+        println!("BLACKJACK!");
+        return true;
+    } else {
+        let hand_points = hand.points;
+        match hand_points {
+            21 => {
+                println!("YOU GOT 21 POINTS!");
+                return true;
+            }
+            0 => {
+                println!("BUST.\nI'm afraid you lose this game :(\n");
+                return true;
+            }
+            _ => (),
         }
-        0 => {
-            println!("BUST.\nI'm afraid you lose this game :(\n");
-            return true;
-        }
-        _ => (),
     }
     false
 }
@@ -286,7 +290,7 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
             };
             if player_points == 21 || player_points > dealer_points {
                 println!(
-                    "{player} (#{hand_index} hand) won {money} :)\n",
+                    "{player} (#{hand_index} hand) won {money} €:)\n",
                     player = player,
                     hand_index = i + 1,
                     money = player.actual_bet * 2
