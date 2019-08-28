@@ -27,7 +27,6 @@ fn main() {
             }
             Err(_) => {
                 println!("Expected integer input");
-                continue;
             }
         }
     };
