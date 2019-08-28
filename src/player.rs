@@ -26,12 +26,16 @@ impl Player {
         }
     }
 
-    pub fn first_hand(&self) -> Hand {
-        self.hands.0.clone()
+    pub fn reset_hands(&mut self, deck: &mut Deck) {
+        self.hands.0.initialize_attributes(deck);
+
+        if let Some(hand) = &mut self.hands.1 {
+            hand.initialize_attributes(deck);
+        }
     }
 
-    pub fn hand_mut(&mut self) -> &mut Hand {
-        &mut self.hands.0
+    pub fn first_hand(&self) -> Hand {
+        self.hands.0.clone()
     }
 
     pub fn bet(&mut self, money: i32) {

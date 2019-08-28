@@ -341,7 +341,7 @@ fn next_game(players: &mut Vec<Player>, dealer_hand: &mut Hand, deck: &mut Deck)
     players.retain(|player| ask_if_next_game(player));
 
     for player in players.iter_mut() {
-        player.hand_mut().initialize_attributes(deck);
+        player.reset_hands(deck);
     }
 
     println!("\n\n\n");
