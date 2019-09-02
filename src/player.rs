@@ -85,6 +85,7 @@ impl Player {
     }
     pub fn split(&mut self, deck: &mut Deck) -> bool {
         if self.can_split() {
+            self.actual_bet *= 2;
             let cards = vec![
                 self.hands.0.cards.pop().expect("Failed to split"),
                 deck.deal_card(),

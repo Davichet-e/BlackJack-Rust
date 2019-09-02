@@ -49,7 +49,7 @@ impl Hand {
     }
     pub fn has_blackjack(hand: &Hand) -> bool {
         let ref hand_cards: Vec<Card> = hand.cards;
-        hand_cards.len() == 2 && Hand::calculate_points(hand_cards) == 21
+        hand_cards.len() == 2 && hand.points == 21
     }
 
     pub fn initialize_attributes(&mut self, deck: &mut Deck) {
