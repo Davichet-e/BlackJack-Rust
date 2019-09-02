@@ -91,7 +91,7 @@ fn ask_and_set_player_attributes(number_of_people: u8, players: &mut Vec<Player>
     for i in 0..number_of_people {
         let name: String = ask_user(format!("\nPlease, enter your name player {}", i + 1).as_str());
         loop {
-            let initial_money: i32 =
+            let initial_money: u32 =
                 match ask_user("How much money do you have? (Use only integer values)")
                     .trim()
                     .parse()
@@ -115,7 +115,7 @@ fn ask_and_set_player_attributes(number_of_people: u8, players: &mut Vec<Player>
 
 fn ask_player_bet(player: &mut Player) {
     loop {
-        let bet: i32 = match ask_user("What bet do you wanna make? (Use only integral values)")
+        let bet: u32 = match ask_user("What bet do you wanna make? (Use only integral values)")
             .trim()
             .parse()
         {
@@ -181,6 +181,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
             12
         }
     );
+    let mut has_doubled = false;
     let mut has_splitted = false;
     for i in 0..2 {
         let mut hand = if i == 0 {
@@ -215,26 +216,36 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     break;
                 }
                 "split" | "sp" => {
-                    has_splitted = player.split(deck);
-                    if has_splitted {
-                        println!("You have splitted your hand!");
+                    if !has_doubled {
+                        match player.split(deck) {
+                            Ok(()) => {
+                                has_splitted = true;
+                                println!("You have splitted the hand!")
+                            }
+                            Err(msg) => println!("{}", msg)
+                        }
                     } else {
-                        println!("You cannot split this hand!");
+                        println!("Cannot split because you have already doubled");
                     }
                 }
                 "double" | "d" => {
-                    if player.double() {
-                        println!("Bet doubled!");
+                    // Checks if the player had already doubled
+                    if !has_doubled {
+                        match player.double() {
+                            Ok(()) => {
+                                has_doubled = true;
+                                println!("You have doubled your hand!")
+                            }
+                            Err(msg) => println!("{}", msg)
+                        }
                     } else {
-                        println!("You cannot double your bet!");
+                        println!("Cannot double more than once!");
                     }
                 }
                 "surrender" | "surr" => {
-                    if player.surrender() {
-                        println!("You surrendered!");
-                        break;
-                    } else {
-                        println!("You cannot surrender now!");
+                    match player.surrender() {
+                        Ok(()) => println!("You have surrendered!"),
+                        Err(msg) => println!("{}", msg)
                     }
                 }
 
@@ -288,22 +299,26 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
                 hand_splitted.unwrap().points
             };
             if player_points == 21 || player_points > dealer_points {
-                let money_earned: i32 = player.win();
+                let money_earned: u32 = player.win();
                 println!(
-                    "{player} (#{hand_index} hand) won {money} €:)\n",
+                    "{player} (#{hand_index} hand) won {money}€! :)\n",
                     player = player,
                     hand_index = i + 1,
                     money = money_earned
                 );
             } else if player_points == 0 || player_points < dealer_points {
                 println!(
-                    "{}, your #{} hand lost against the dealer :(\n",
-                    player,
-                    i + 1
+                    "{player} (#{hand_index} hand) lost! :(\n",
+                    player = player,
+                    hand_index = i + 1
                 );
                 player.lose();
             } else {
-                println!("It's a tie! :|");
+                println!(
+                    "{player} (#{hand_index} hand) tied! :|\n",
+                    player = player,
+                    hand_index = i + 1
+                );
             }
         }
     }
@@ -311,7 +326,12 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
 
 fn ask_if_next_game(player: &Player) -> bool {
     let mut player_next_game = false;
-    let mut final_balance: String = format!("{} €", player.actual_money - player.initial_money);
+    // Since unsigned ints cannot be negative, I need to cast the values to i64 to avoid errors.
+    // Casting to a i32 int would cause errors if the values exceeded the i32 limit.
+    let mut final_balance: String = format!(
+        "{} €",
+        player.actual_money as i64 - player.initial_money as i64
+    );
     if !final_balance.starts_with("-") {
         final_balance.insert(0, '+');
     }

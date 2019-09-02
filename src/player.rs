@@ -1,12 +1,12 @@
-use crate::{Deck, Hand};
+use crate::{Card, Deck, Hand};
 use std::fmt;
 
 pub struct Player {
     pub hands: (Hand, Option<Hand>),
     pub name: String,
-    pub initial_money: i32,
-    pub actual_money: i32,
-    pub actual_bet: i32,
+    pub initial_money: u32,
+    pub actual_money: u32,
+    pub actual_bet: u32,
 }
 
 impl fmt::Display for Player {
@@ -16,7 +16,7 @@ impl fmt::Display for Player {
 }
 
 impl Player {
-    pub fn new(name: String, initial_money: i32, deck: &mut Deck) -> Player {
+    pub fn new(name: String, initial_money: u32, deck: &mut Deck) -> Player {
         Player {
             hands: (Hand::new(deck), None),
             name,
@@ -38,7 +38,7 @@ impl Player {
         self.hands.0.clone()
     }
 
-    pub fn bet(&mut self, money: i32) {
+    pub fn bet(&mut self, money: u32) {
         self.actual_bet = money;
     }
 
@@ -52,58 +52,61 @@ impl Player {
             }
         }
     }
-    fn can_double(&self) -> bool {
-        self.actual_bet * 2 <= self.actual_money
-            && self.first_hand().cards.len() == 2
-            && self.hands.1.is_none()
-    }
-    pub fn double(&mut self) -> bool {
-        if self.can_double() {
-            self.actual_bet *= 2;
-            return true;
+
+    pub fn double(&mut self) -> Result<(), &str> {
+        if self.actual_bet * 2 > self.actual_money {
+            return Err("Cannot double because you have not enough money!");
+        } else if self.first_hand().cards.len() != 2 {
+            return Err("Cannot double because you have already hit!");
+        } else if self.hands.1.is_some() {
+            return Err("Cannot double because you have already splitted!");
         }
-        false
-    }
-    fn can_surrender(&self) -> bool {
-        self.first_hand().cards.len() == 2 && self.hands.1.is_none()
+
+        self.actual_bet *= 2;
+        Ok(())
     }
 
-    pub fn surrender(&mut self) -> bool {
-        if self.can_surrender() {
-            self.actual_bet /= 2;
-            self.hands.0.points = 0;
-            return true;
+    pub fn surrender(&mut self) -> Result<(), &str> {
+        if self.hands.0.cards.len() != 2 {
+            return Err("Cannot surrender because you have already hit!");
+        } else if self.hands.1.is_some() {
+            return Err("Cannot surrender because you have already splitted!");
         }
-        false
+        self.actual_bet /= 2;
+        self.hands.0.points = 0;
+        Ok(())
     }
 
-    fn can_split(&self) -> bool {
-        self.actual_bet * 2 <= self.actual_money
-            && self.hands.1.is_none()
-            && self.hands.0.cards.len() == 2
-            && self.hands.0.cards[0].name == self.hands.0.cards[1].name
-    }
-    pub fn split(&mut self, deck: &mut Deck) -> bool {
-        if self.can_split() {
-            self.actual_bet *= 2;
-            let cards = vec![
-                self.hands.0.cards.pop().expect("Failed to split"),
-                deck.deal_card(),
-            ];
-            let points = Hand::calculate_points(&cards);
-            self.hands.1 = Some(Hand {
-                cards,
-                points,
-                aces: 0,
-            });
-
-            self.hands.0.deal_card(deck);
-            return true;
+    pub fn split(&mut self, deck: &mut Deck) -> Result<(), &str> {
+        let ref mut first_hand_cards: Vec<Card> = self.hands.0.cards;
+        if self.actual_bet * 2 > self.actual_money {
+            return Err("Cannot split because you have not enough money!");
+        } else if self.hands.1.is_some() {
+            return Err("Cannot split because you have already splitted!");
+        } else if first_hand_cards.len() != 2 {
+            return Err("Cannot split because you have already hit!");
+        } else if first_hand_cards[0].name != first_hand_cards[1].name {
+            return Err("Cannot split because your cards are not equal!");
         }
-        false
+
+        self.actual_bet *= 2;
+
+        let cards: Vec<Card> = vec![
+            first_hand_cards.pop().expect("Failed to split"),
+            deck.deal_card(),
+        ];
+        let points: i8 = Hand::calculate_points(&cards);
+        self.hands.1 = Some(Hand {
+            cards,
+            points,
+            aces: 0,
+        });
+
+        self.hands.0.deal_card(deck);
+        Ok(())
     }
-    pub fn win(&mut self) -> i32 {
-        let money_before: i32 = self.actual_money;
+    pub fn win(&mut self) -> u32 {
+        let money_before: u32 = self.actual_money;
         self.actual_money += self.actual_bet;
 
         // If has a BlackJack, sums 1.5 times the actual bet, otherwise just 1 time
