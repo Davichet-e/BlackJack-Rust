@@ -32,7 +32,7 @@ fn main() {
     };
     let mut deck = Deck::new(n_of_decks);
     let mut dealer_hand = Hand::new(&mut deck);
-
+    println!("####### Game Started #######");
     start_game(&mut players, &mut deck);
     loop {
         println!(
@@ -168,12 +168,14 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
         player = player,
         actual_money = player.actual_money
     );
-    let player_points = Hand::calculate_points(&player.first_hand().cards);
+    let player_first_hand_cards: Vec<Card> = player.hands.0.cards.clone();
+
+    let player_points = Hand::calculate_points(&player_first_hand_cards);
     ask_player_bet(player);
     println!(
-        "Your cards are:\n{} and {} ({} points)\n",
-        player.first_hand().cards[0],
-        player.first_hand().cards[1],
+        "\nYour cards are:\n{} and {} ({} points)\n",
+        player_first_hand_cards[0],
+        player_first_hand_cards[1],
         // If the initial cards of the player are 2 aces, display correctly the points
         if player_points != 22 {
             player_points
@@ -220,12 +222,12 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                         match player.split(deck) {
                             Ok(()) => {
                                 has_splitted = true;
-                                println!("You have splitted the hand!")
+                                println!("You have splitted the hand!\n")
                             }
                             Err(msg) => println!("{}", msg)
                         }
                     } else {
-                        println!("Cannot split because you have already doubled");
+                        println!("Cannot split because you have already doubled\n");
                     }
                 }
                 "double" | "d" => {
@@ -234,18 +236,22 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                         match player.double() {
                             Ok(()) => {
                                 has_doubled = true;
-                                println!("You have doubled your hand!")
+                                println!("You have doubled your hand!\n")
                             }
                             Err(msg) => println!("{}", msg)
                         }
                     } else {
-                        println!("Cannot double more than once!");
+                        println!("Cannot double more than once!\n");
                     }
                 }
                 "surrender" | "surr" => {
-                    match player.surrender() {
-                        Ok(()) => println!("You have surrendered!"),
-                        Err(msg) => println!("{}", msg)
+                    if !has_doubled {
+                        match player.surrender() {
+                            Ok(()) => println!("You have surrendered!\n"),
+                            Err(msg) => println!("{}", msg)
+                        }
+                    } else {
+                        println!("Cannot surrender because you have already doubled\n");
                     }
                 }
 
@@ -285,6 +291,7 @@ fn dealer_turn(dealer_hand: &mut Hand, deck: &mut Deck) {
 }
 
 fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
+    println!("####### Game Finished #######\n");
     let dealer_points = dealer_hand.points;
 
     for player in players.iter_mut() {

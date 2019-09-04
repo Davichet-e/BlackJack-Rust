@@ -34,10 +34,6 @@ impl Player {
         }
     }
 
-    pub fn first_hand(&self) -> Hand {
-        self.hands.0.clone()
-    }
-
     pub fn bet(&mut self, money: u32) {
         self.actual_bet = money;
     }
@@ -56,7 +52,7 @@ impl Player {
     pub fn double(&mut self) -> Result<(), &str> {
         if self.actual_bet * 2 > self.actual_money {
             return Err("Cannot double because you have not enough money!");
-        } else if self.first_hand().cards.len() != 2 {
+        } else if self.hands.0.cards.len() != 2 {
             return Err("Cannot double because you have already hit!");
         } else if self.hands.1.is_some() {
             return Err("Cannot double because you have already splitted!");
