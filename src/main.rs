@@ -138,7 +138,7 @@ fn ask_player_bet(player: &mut Player) {
 }
 
 fn hand_win_or_lose(hand: &Hand) -> bool {
-    if Hand::has_blackjack(hand) {
+    if hand.has_blackjack() {
         println!("BLACKJACK!");
         return true;
     } else {
@@ -305,7 +305,7 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
             } else {
                 hand_splitted.unwrap().points
             };
-            if player_points == 21 || player_points > dealer_points {
+            if player_points > dealer_points && !dealer_hand.has_blackjack() {
                 let money_earned: u32 = player.win();
                 println!(
                     "{player} (#{hand_index} hand) won {money}€! :)\n",
