@@ -61,6 +61,16 @@ fn ask_user(prompt: &str) -> String {
     input
 }
 
+fn ask_user_number(prompt: &str) -> Option<u32> {
+    return match ask_user(prompt).trim().parse() {
+        Ok(val) => Some(val),
+        Err(_) => {
+            println!("Expected integer input");
+            None
+        }
+    };
+}
+
 fn start_game(players: &mut Vec<Player>, deck: &mut Deck) {
     let number_of_people: u8 = ask_number_of_people();
     ask_and_set_player_attributes(number_of_people, players, deck);
@@ -68,16 +78,11 @@ fn start_game(players: &mut Vec<Player>, deck: &mut Deck) {
 
 fn ask_number_of_people() -> u8 {
     loop {
-        let number_of_people: u8 = match ask_user("\nHow many people are going to play? (1-7)")
-            .trim()
-            .parse()
-        {
-            Ok(val) => val,
-            Err(_) => {
-                println!("Expected integer input");
-                continue;
-            }
-        };
+        let number_of_people: u8 =
+            match ask_user_number("\nHow many people are going to play? (1-7)") {
+                Some(value) => value as u8,
+                None => continue,
+            };
 
         if !(0 < number_of_people && number_of_people <= 7) {
             println!("The number of people must be between 1 and 7");
@@ -92,15 +97,9 @@ fn ask_and_set_player_attributes(number_of_people: u8, players: &mut Vec<Player>
         let name: String = ask_user(format!("\nPlease, enter your name player {}", i + 1).as_str());
         loop {
             let initial_money: u32 =
-                match ask_user("How much money do you have? (Use only integer values)")
-                    .trim()
-                    .parse()
-                {
-                    Ok(val) => val,
-                    Err(_) => {
-                        println!("Expected integer input");
-                        continue;
-                    }
+                match ask_user_number("How much money do you have? (Use only integer values)") {
+                    Some(value) => value,
+                    None => continue,
                 };
 
             if initial_money < 50 {
@@ -115,16 +114,11 @@ fn ask_and_set_player_attributes(number_of_people: u8, players: &mut Vec<Player>
 
 fn ask_player_bet(player: &mut Player) {
     loop {
-        let bet: u32 = match ask_user("What bet do you wanna make? (Use only integral values)")
-            .trim()
-            .parse()
-        {
-            Ok(val) => val,
-            Err(_) => {
-                println!("Expected integer input");
-                continue;
-            }
-        };
+        let bet: u32 =
+            match ask_user_number("What bet do you wanna make? (Use only integral values)") {
+                Some(value) => value,
+                None => continue,
+            };
 
         if bet > player.actual_money {
             println!("Your bet cannot be greater than your actual money.\n");
@@ -142,7 +136,7 @@ fn hand_win_or_lose(hand: &Hand) -> bool {
         println!("BLACKJACK!");
         return true;
     } else {
-        let hand_points = hand.points;
+        let hand_points: u8 = hand.points;
         match hand_points {
             21 => {
                 println!("YOU GOT 21 POINTS!");
@@ -185,13 +179,15 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
     );
     let mut has_doubled = false;
     let mut has_splitted = false;
+    let mut hit_counter = 0;
     for i in 0..2 {
         let mut hand = if i == 0 {
             player.hands.0.clone()
         } else {
             player.hands.1.clone().unwrap()
         };
-        while !hand_win_or_lose(&hand) {
+        // If the player has doubled, he can only ask for one more card
+        while !hand_win_or_lose(&hand) && (!has_doubled || hit_counter < 1) {
             if has_splitted {
                 println!("(Hand #{})", i + 1);
                 println!("Your cards are: {}", hand);
@@ -212,6 +208,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                             player.hands.1.clone().unwrap()
                         }
                     );
+                    hit_counter += 1;
                 }
                 "stand" | "s" => {
                     println!("{} stood", player);

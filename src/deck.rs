@@ -10,7 +10,7 @@ pub struct Card {
 }
 
 impl Card {
-    pub fn name_to_value(&self) -> i8 {
+    pub fn name_to_value(&self) -> u8 {
         match self.name.as_str() {
             "ACE" => 11,
             "TWO" => 2,

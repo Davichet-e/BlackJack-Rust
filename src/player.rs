@@ -91,7 +91,7 @@ impl Player {
             first_hand_cards.pop().expect("Failed to split"),
             deck.deal_card(),
         ];
-        let points: i8 = Hand::calculate_points(&cards);
+        let points: u8 = Hand::calculate_points(&cards);
         self.hands.1 = Some(Hand {
             cards,
             points,
@@ -106,10 +106,10 @@ impl Player {
         self.actual_money += self.actual_bet;
 
         // If has a BlackJack, sums 1.5 times the actual bet, otherwise just 1 time
-        if Hand::has_blackjack(&self.hands.0) {
+        if self.hands.0.has_blackjack() {
             self.actual_money += self.actual_bet / 2;
         }
-        if self.hands.1.is_some() && Hand::has_blackjack(self.hands.1.as_ref().unwrap()) {
+        if self.hands.1.is_some() && self.hands.1.as_ref().unwrap().has_blackjack() {
             self.actual_money += self.actual_bet / 2;
         }
         self.actual_money - money_before

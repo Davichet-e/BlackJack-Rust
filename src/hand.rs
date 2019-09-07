@@ -4,8 +4,8 @@ use std::fmt;
 #[derive(Clone)]
 pub struct Hand {
     pub cards: Vec<Card>,
-    pub points: i8,
-    pub aces: i8,
+    pub points: u8,
+    pub aces: u8,
 }
 
 impl fmt::Display for Hand {
@@ -34,7 +34,7 @@ impl fmt::Display for Hand {
 impl Hand {
     pub fn new(deck: &mut Deck) -> Hand {
         let cards: Vec<Card> = deck.get_initial_cards();
-        let points: i8 = Hand::calculate_points(&cards);
+        let points: u8 = Hand::calculate_points(&cards);
 
         let mut hand = Hand {
             cards: cards,
@@ -87,7 +87,7 @@ impl Hand {
         self.check_ace_points();
     }
 
-    pub fn calculate_points(cards: &Vec<Card>) -> i8 {
+    pub fn calculate_points(cards: &Vec<Card>) -> u8 {
         cards.iter().fold(0, |acc, card| acc + card.name_to_value())
     }
 }
