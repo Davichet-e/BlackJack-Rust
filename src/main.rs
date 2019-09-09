@@ -164,22 +164,14 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
     );
     let player_first_hand_cards: Vec<Card> = player.hands.0.cards.clone();
 
-    let player_points = Hand::calculate_points(&player_first_hand_cards);
     ask_player_bet(player);
     println!(
         "\nYour cards are:\n{} and {} ({} points)\n",
-        player_first_hand_cards[0],
-        player_first_hand_cards[1],
-        // If the initial cards of the player are 2 aces, display correctly the points
-        if player_points != 22 {
-            player_points
-        } else {
-            12
-        }
+        player_first_hand_cards[0], player_first_hand_cards[1], player.hands.0.points
     );
     let mut has_doubled = false;
     let mut has_splitted = false;
-    let mut hit_counter = 0;
+    let mut hit_counter: u8 = 0;
     for i in 0..2 {
         let mut hand = if i == 0 {
             player.hands.0.clone()
@@ -196,7 +188,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 .to_lowercase()
                 .trim()
             {
-                "hit" | "h" => {
+                "h" | "hit" => {
                     player.hit(deck, i);
                     println!(
                         "Now, the cards of your {} hand are: {}",
@@ -210,11 +202,11 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     );
                     hit_counter += 1;
                 }
-                "stand" | "s" => {
+                "s" | "stand" => {
                     println!("{} stood", player);
                     break;
                 }
-                "split" | "sp" => {
+                "sp" | "split" => {
                     if !has_doubled {
                         match player.split(deck) {
                             Ok(()) => {
@@ -227,7 +219,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                         println!("Cannot split because you have already doubled\n");
                     }
                 }
-                "double" | "d" => {
+                "d" | "double" => {
                     // Checks if the player had already doubled
                     if !has_doubled {
                         match player.double() {
@@ -241,7 +233,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                         println!("Cannot double more than once!\n");
                     }
                 }
-                "surrender" | "surr" => {
+                "surr" | "surrender" => {
                     if !has_doubled {
                         match player.surrender() {
                             Ok(()) => println!("You have surrendered!\n"),
