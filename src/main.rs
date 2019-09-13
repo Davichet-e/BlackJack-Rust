@@ -162,24 +162,18 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
         player = player,
         actual_money = player.actual_money
     );
-    let player_first_hand_cards: Vec<Card> = player.hands.0.cards.clone();
+    let player_first_hand_cards: Vec<Card> = player.hands[0].cards.clone();
 
     ask_player_bet(player);
     println!(
         "\nYour cards are:\n{} and {} ({} points)\n",
-        player_first_hand_cards[0], player_first_hand_cards[1], player.hands.0.points
+        player_first_hand_cards[0], player_first_hand_cards[1], player.hands[0].points
     );
     let mut has_doubled = false;
     let mut has_splitted = false;
-    let mut hit_counter: u8 = 0;
-    for i in 0..2 {
-        let mut hand = if i == 0 {
-            player.hands.0.clone()
-        } else {
-            player.hands.1.clone().unwrap()
-        };
+    for (i, hand) in player.hands.clone().iter_mut().enumerate() {
         // If the player has doubled, he can only ask for one more card
-        while !hand_win_or_lose(&hand) && (!has_doubled || hit_counter < 1) {
+        while !hand_win_or_lose(&hand) && (!has_doubled || hand.cards.len() < 3) {
             if has_splitted {
                 println!("(Hand #{})", i + 1);
                 println!("Your cards are: {}", hand);
@@ -191,16 +185,9 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 "h" | "hit" => {
                     player.hit(deck, i);
                     println!(
-                        "Now, the cards of your {} hand are: {}",
-                        if i == 0 { "first" } else { "second" },
-                        // Update the hand
-                        if i == 0 {
-                            player.hands.0.clone()
-                        } else {
-                            player.hands.1.clone().unwrap()
-                        }
+                        "Now, the cards are: {}",
+                        hand
                     );
-                    hit_counter += 1;
                 }
                 "s" | "stand" => {
                     println!("{} stood", player);
@@ -210,7 +197,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     if !has_doubled {
                         match player.split(deck) {
                             Ok(()) => {
-                                has_splitted = true;
+                                 has_splitted = true;
                                 println!("You have splitted the hand!\n")
                             }
                             Err(msg) => println!("{}", msg)
@@ -246,12 +233,6 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
 
                 _ => println!("Invalid command!\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender"),
             }
-            // Update the hand
-            hand = if i == 0 {
-                player.hands.0.clone()
-            } else {
-                player.hands.1.clone().unwrap()
-            };
         }
         if !has_splitted {
             break;
@@ -284,35 +265,30 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
     let dealer_points = dealer_hand.points;
 
     for player in players.iter_mut() {
-        for i in 0..2 {
-            let hand_splitted = player.hands.1.clone();
-            if i == 1 && hand_splitted.is_none() {
-                break;
-            }
-            let player_points = if i == 0 {
-                player.hands.0.points
-            } else {
-                hand_splitted.unwrap().points
-            };
-            if player_points > dealer_points && !dealer_hand.has_blackjack() {
+        let player_cloned: Player = player.clone();
+        for (i, hand) in player.hands.clone().iter().enumerate() {
+            let hand_points: u8 = hand.points;
+            if hand_points > dealer_points
+                || player.hands[0].has_blackjack() && !dealer_hand.has_blackjack()
+            {
                 let money_earned: u32 = player.win();
                 println!(
                     "{player} (#{hand_index} hand) won {money}€! :)\n",
-                    player = player,
+                    player = player_cloned,
                     hand_index = i + 1,
                     money = money_earned
                 );
-            } else if player_points == 0 || player_points < dealer_points {
+            } else if hand_points == 0 || hand_points < dealer_points {
                 println!(
                     "{player} (#{hand_index} hand) lost! :(\n",
-                    player = player,
+                    player = player_cloned,
                     hand_index = i + 1
                 );
                 player.lose();
             } else {
                 println!(
                     "{player} (#{hand_index} hand) tied! :|\n",
-                    player = player,
+                    player = player_cloned,
                     hand_index = i + 1
                 );
             }
@@ -322,7 +298,7 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
 
 fn ask_if_next_game(player: &Player) -> bool {
     let mut player_next_game = false;
-    // Since unsigned ints cannot be negative, I need to cast the values to i64 to avoid errors.
+    // Since unsigned integers cannot be negative, I need to cast the values to i64 to avoid errors.
     // Casting to a i32 int would cause errors if the values exceeded the i32 limit.
     let mut final_balance: String = format!(
         "{} €",
