@@ -171,7 +171,8 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
     );
     let mut has_doubled = false;
     let mut has_splitted = false;
-    for (i, hand) in player.hands.clone().iter_mut().enumerate() {
+    for i in 0..2 {
+        let mut hand: Hand = player.hands[i].clone();
         // If the player has doubled, he can only ask for one more card
         while !hand_win_or_lose(&hand) && (!has_doubled || hand.cards.len() < 3) {
             if has_splitted {
@@ -186,7 +187,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     player.hit(deck, i);
                     println!(
                         "Now, the cards are: {}",
-                        hand
+                        player.hands[i]
                     );
                 }
                 "s" | "stand" => {
@@ -233,6 +234,8 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
 
                 _ => println!("Invalid command!\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender"),
             }
+            // Update the hand
+            hand = player.hands[i].clone();
         }
         if !has_splitted {
             break;
@@ -273,16 +276,25 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
             {
                 let money_earned: u32 = player.win();
                 println!(
-                    "{player} (#{hand_index} hand) won {money}€! :)\n",
+                    "{player}{} won {money}€! :)\n",
+                    // If it hasn't splitted, don't show the hand's index
+                    if player.hands.len() == 1 {
+                        format!(" (#{} hand)", i + 1)
+                    } else {
+                        String::new()
+                    },
                     player = player_cloned,
-                    hand_index = i + 1,
-                    money = money_earned
+                    money = money_earned,
                 );
             } else if hand_points == 0 || hand_points < dealer_points {
                 println!(
-                    "{player} (#{hand_index} hand) lost! :(\n",
+                    "{player}{} lost! :(\n",
+                    if player.hands.len() == 1 {
+                        String::new()
+                    } else {
+                        format!(" (#{} hand)", i + 1)
+                    },
                     player = player_cloned,
-                    hand_index = i + 1
                 );
                 player.lose();
             } else {
