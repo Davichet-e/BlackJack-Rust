@@ -198,7 +198,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     if !has_doubled {
                         match player.split(deck) {
                             Ok(()) => {
-                                 has_splitted = true;
+                                has_splitted = true;
                                 println!("You have splitted the hand!\n")
                             }
                             Err(msg) => println!("{}", msg)
@@ -279,9 +279,9 @@ fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
                     "{player}{} won {money}€! :)\n",
                     // If it hasn't splitted, don't show the hand's index
                     if player.hands.len() == 1 {
-                        format!(" (#{} hand)", i + 1)
-                    } else {
                         String::new()
+                    } else {
+                        format!(" (#{} hand)", i + 1)
                     },
                     player = player_cloned,
                     money = money_earned,
