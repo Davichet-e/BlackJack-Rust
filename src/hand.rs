@@ -37,8 +37,8 @@ impl Hand {
         let points: u8 = Hand::calculate_points(&cards);
 
         let mut hand = Hand {
-            cards: cards,
-            points: points,
+            cards,
+            points,
             aces: 0,
         };
         for card in hand.cards.clone() {
@@ -87,7 +87,7 @@ impl Hand {
         self.check_ace_points();
     }
 
-    pub fn calculate_points(cards: &Vec<Card>) -> u8 {
+    pub fn calculate_points(cards: &[Card]) -> u8 {
         cards.iter().fold(0, |acc, card| acc + card.name_to_value())
     }
 }

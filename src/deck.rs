@@ -50,7 +50,7 @@ impl Deck {
                 for &card_name in CARD_NAMES.iter() {
                     deck.push(Card {
                         name: card_name.to_string(),
-                        suit: suit,
+                        suit,
                     });
                 }
             }
