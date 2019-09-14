@@ -62,13 +62,17 @@ fn ask_user(prompt: &str) -> String {
 }
 
 fn ask_user_number(prompt: &str) -> Option<u32> {
-    return match ask_user(prompt).trim().parse() {
-        Ok(val) => Some(val),
-        Err(_) => {
-            println!("Expected integer input");
+    match ask_user(prompt).trim().parse::<i64>() {
+        Ok(val) if val > 0 => Some(val as u32),
+        Ok(_) => {
+            println!("The number must be greater than 0.\n");
             None
         }
-    };
+        Err(_) => {
+            println!("Expected integer input.");
+            None
+        }
+    }
 }
 
 fn start_game(players: &mut Vec<Player>, deck: &mut Deck) {
@@ -122,8 +126,6 @@ fn ask_player_bet(player: &mut Player) {
 
         if bet > player.actual_money {
             println!("Your bet cannot be greater than your actual money.\n");
-        } else if bet <= 0 {
-            println!("Your bet must be greater than 0.\n");
         } else {
             player.bet(bet);
             break;
@@ -314,9 +316,9 @@ fn ask_if_next_game(player: &Player) -> bool {
     // Casting to a i32 int would cause errors if the values exceeded the i32 limit.
     let mut final_balance: String = format!(
         "{} €",
-        player.actual_money as i64 - player.initial_money as i64
+        i64::from(player.actual_money) - i64::from(player.initial_money)
     );
-    if !final_balance.starts_with("-") {
+    if !final_balance.starts_with('-') {
         final_balance.insert(0, '+');
     }
     if player.actual_money > 0 {
