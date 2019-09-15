@@ -11,7 +11,7 @@ pub struct Card {
 
 impl Card {
     pub fn name_to_value(&self) -> u8 {
-        match self.name.as_str() {
+        match self.name.to_uppercase().trim() {
             "ACE" => 11,
             "TWO" => 2,
             "THREE" => 3,
@@ -22,7 +22,7 @@ impl Card {
             "EIGHT" => 8,
             "NINE" => 9,
             "TEN" | "JACK" | "QUEEN" | "KING" => 10,
-            _ => panic!("Not valid"),
+            _ => panic!("Name not valid."),
         }
     }
 }
