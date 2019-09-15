@@ -109,7 +109,7 @@ fn ask_and_set_player_attributes(number_of_people: u8, players: &mut Vec<Player>
             if initial_money < 50 {
                 println!("The initial money must be greater or equal than 50\n");
             } else {
-                players.push(Player::new(name.trim().to_string(), initial_money, deck));
+                players.push(Player::new(String::from(name.trim()), initial_money, deck));
                 break;
             }
         }
@@ -265,7 +265,7 @@ fn dealer_turn(dealer_hand: &mut Hand, deck: &mut Deck) {
     }
 }
 
-fn end_game(players: &mut Vec<Player>, dealer_hand: &Hand) {
+fn end_game(players: &mut [Player], dealer_hand: &Hand) {
     println!("####### Game Finished #######\n");
     let dealer_points = dealer_hand.points;
 
