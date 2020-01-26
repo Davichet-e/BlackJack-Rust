@@ -5,7 +5,7 @@ mod player;
 use std::io;
 use std::io::Write;
 
-use deck::{Card, Deck};
+use deck::Deck;
 use hand::Hand;
 use player::Player;
 
@@ -82,16 +82,16 @@ fn start_game(players: &mut Vec<Player>, deck: &mut Deck) {
 
 fn ask_number_of_people() -> u8 {
     loop {
-        let number_of_people: u8 =
+        let number_of_people: u32 =
             match ask_user_number("\nHow many people are going to play? (1-7)") {
-                Some(value) => value as u8,
+                Some(value) => value,
                 None => continue,
             };
 
         if !(0 < number_of_people && number_of_people <= 7) {
             println!("The number of people must be between 1 and 7");
         } else {
-            break number_of_people;
+            break number_of_people as u8;
         }
     }
 }
@@ -116,7 +116,7 @@ fn ask_and_set_player_attributes(number_of_people: u8, players: &mut Vec<Player>
     }
 }
 
-fn ask_player_bet(player: &mut Player) {
+fn ask_player_bet(player: &Player) -> u32 {
     loop {
         let bet: u32 =
             match ask_user_number("What bet do you wanna make? (Use only integral values)") {
@@ -127,31 +127,28 @@ fn ask_player_bet(player: &mut Player) {
         if bet > player.actual_money {
             println!("Your bet cannot be greater than your actual money.\n");
         } else {
-            player.bet(bet);
-            break;
+            break bet;
         }
     }
 }
 
 fn hand_win_or_lose(hand: &Hand) -> bool {
     if hand.has_blackjack() {
-        println!("BLACKJACK!");
-        return true;
+        println!("BLACKJACK!\n");
+        true
     } else {
-        let hand_points: u8 = hand.points;
-        match hand_points {
+        match hand.points {
             21 => {
-                println!("YOU GOT 21 POINTS!");
-                return true;
+                println!("YOU GOT 21 POINTS!\n");
+                true
             }
             0 => {
                 println!("BUST.\nI'm afraid you lose this game :(\n");
-                return true;
+                true
             }
-            _ => (),
+            _ => false,
         }
     }
-    false
 }
 
 fn check_if_yes(user_decision: &str) -> bool {
@@ -164,22 +161,21 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
         player = player,
         actual_money = player.actual_money
     );
-    let player_first_hand_cards: Vec<Card> = player.hands[0].cards.clone();
-
-    ask_player_bet(player);
+    let bet: u32 = ask_player_bet(player);
+    player.bet(bet);
+    let player_first_hand: &Hand = &player.hands[0];
     println!(
         "\nYour cards are:\n{} and {} ({} points)\n",
-        player_first_hand_cards[0], player_first_hand_cards[1], player.hands[0].points
+        player_first_hand.cards[0], player_first_hand.cards[1], player_first_hand.points
     );
-    let mut has_doubled = false;
-    let mut has_splitted = false;
     for i in 0..2 {
-        let mut hand: Hand = player.hands[i].clone();
-        // If the player has doubled, he can only ask for one more card
-        while !hand_win_or_lose(&hand) && (!has_doubled || hand.cards.len() < 3) {
-            if has_splitted {
-                println!("(Hand #{})", i + 1);
-                println!("Your cards are: {}", hand);
+        let mut has_doubled = false;
+        while !hand_win_or_lose(&player.hands[i])
+            // If the player has doubled, he can only ask for one more card
+            && (!has_doubled || player.hands[i].cards.len() < 3)
+        {
+            if player.hands.len() > 1 {
+                println!("\n(Hand #{})", i + 1);
             }
             match ask_user("What do you want to do?\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender")
                 .to_lowercase()
@@ -199,25 +195,23 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 "sp" | "split" => {
                     if !has_doubled {
                         match player.split(deck) {
-                            Ok(()) => {
-                                has_splitted = true;
+                            Some(error_message) => println!("{}", error_message),
+                            None => {
                                 println!("You have splitted the hand!\n")
                             }
-                            Err(msg) => println!("{}", msg)
                         }
                     } else {
                         println!("Cannot split because you have already doubled\n");
                     }
                 }
                 "d" | "double" => {
-                    // Checks if the player had already doubled
                     if !has_doubled {
                         match player.double() {
-                            Ok(()) => {
+                            Some(error_message) => println!("{}", error_message),
+                            None => {
                                 has_doubled = true;
                                 println!("You have doubled your hand!\n")
                             }
-                            Err(msg) => println!("{}", msg)
                         }
                     } else {
                         println!("Cannot double more than once!\n");
@@ -226,8 +220,8 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 "surr" | "surrender" => {
                     if !has_doubled {
                         match player.surrender() {
-                            Ok(()) => println!("You have surrendered!\n"),
-                            Err(msg) => println!("{}", msg)
+                            Some(error_message) => println!("{}", error_message),
+                            None => println!("You have surrendered!\n")
                         }
                     } else {
                         println!("Cannot surrender because you have already doubled\n");
@@ -236,10 +230,8 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
 
                 _ => println!("Invalid command!\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender"),
             }
-            // Update the hand
-            hand = player.hands[i].clone();
         }
-        if !has_splitted {
+        if player.hands.len() == 1 {
             break;
         }
     }
@@ -248,9 +240,10 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
 fn dealer_lost(dealer_hand: &Hand) -> bool {
     if dealer_hand.points == 0 {
         println!("The dealer busted. The game ended :)\n");
-        return true;
+        true
+    } else {
+        false
     }
-    false
 }
 
 fn dealer_turn(dealer_hand: &mut Hand, deck: &mut Deck) {
@@ -270,7 +263,6 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
     let dealer_points = dealer_hand.points;
 
     for player in players.iter_mut() {
-        let player_cloned: Player = player.clone();
         for (i, hand) in player.hands.clone().iter().enumerate() {
             let hand_points: u8 = hand.points;
             if hand_points > dealer_points
@@ -285,7 +277,7 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
                     } else {
                         format!(" (#{} hand)", i + 1)
                     },
-                    player = player_cloned,
+                    player = player,
                     money = money_earned,
                 );
             } else if hand_points == 0 || hand_points < dealer_points {
@@ -296,14 +288,18 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
                     } else {
                         format!(" (#{} hand)", i + 1)
                     },
-                    player = player_cloned,
+                    player = player,
                 );
                 player.lose();
             } else {
                 println!(
-                    "{player} (#{hand_index} hand) tied! :|\n",
-                    player = player_cloned,
-                    hand_index = i + 1
+                    "{player}{} tied! :|\n",
+                    if player.hands.len() == 1 {
+                        String::new()
+                    } else {
+                        format!(" (#{} hand)", i + 1)
+                    },
+                    player = player,
                 );
             }
         }
@@ -311,30 +307,34 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
 }
 
 fn ask_if_next_game(player: &Player) -> bool {
-    let mut player_next_game = false;
-    // Since unsigned integers cannot be negative, I need to cast the values to i64 to avoid errors.
-    // Casting to a i32 int would cause errors if the values exceeded the i32 limit.
-    let mut final_balance: String = format!(
+    let player_next_game: bool;
+
+    let final_balance: String = format!(
         "{} €",
-        i64::from(player.actual_money) - i64::from(player.initial_money)
+        if player.actual_money >= player.initial_money {
+            format!("+{}", player.actual_money - player.initial_money)
+        } else {
+            // Since unsigned integers cannot be negative, I need to cast the values to i64 to avoid errors.
+            // Casting to a i32 int would cause errors if the values exceeded the i32 limit.
+            (i64::from(player.actual_money) - i64::from(player.initial_money)).to_string()
+        }
     );
-    if !final_balance.starts_with('-') {
-        final_balance.insert(0, '+');
-    }
+
     if player.actual_money > 0 {
-        let decision =
+        let decision: String =
             ask_user(format!("\n{}, do you want to play again? (y/n)\n", player).as_str());
 
         if check_if_yes(decision.as_str()) {
             player_next_game = true;
         } else {
+            player_next_game = false;
             println!(
-                "Thanks for playing, {player}, your final balance is {final_balance}\n",
-                player = player,
-                final_balance = final_balance
+                "Thanks for playing, {}, your final balance is {}\n",
+                player, final_balance
             );
         }
     } else {
+        player_next_game = false;
         println!(
             "{}, you have lost all your money. Thanks for playing\n",
             player
@@ -344,7 +344,7 @@ fn ask_if_next_game(player: &Player) -> bool {
 }
 
 fn next_game(players: &mut Vec<Player>, dealer_hand: &mut Hand, deck: &mut Deck) -> bool {
-    players.retain(|player| ask_if_next_game(player));
+    players.retain(ask_if_next_game);
 
     for player in players.iter_mut() {
         player.reset_hands(deck);
@@ -354,8 +354,8 @@ fn next_game(players: &mut Vec<Player>, dealer_hand: &mut Hand, deck: &mut Deck)
 
     if !players.is_empty() {
         dealer_hand.initialize_attributes(deck);
-        return true;
+        true
+    } else {
+        false
     }
-
-    false
 }
