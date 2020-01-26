@@ -1,12 +1,18 @@
 use std::fmt;
 
+use rand;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Card {
     pub name: String,
     suit: char,
+}
+
+impl fmt::Display for Card {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} of {}", self.name, self.suit)
+    }
 }
 
 impl Card {
@@ -27,27 +33,23 @@ impl Card {
     }
 }
 
-impl fmt::Display for Card {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} of {}", self.name, self.suit)
-    }
-}
-
 pub struct Deck {
-    pub cards: Vec<Card>,
+    cards: Vec<Card>,
 }
 
 impl Deck {
     pub fn new(n_decks: u8) -> Deck {
-        const SUITS: [char; 4] = ['♥', '♦', '♣', '♠'];
-        const CARD_NAMES: [&str; 13] = [
+        let suits: [char; 4] = ['♥', '♦', '♣', '♠'];
+
+        let card_names: [&str; 13] = [
             "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK",
             "QUEEN", "KING",
         ];
+
         let mut deck: Vec<Card> = Vec::new();
         for _ in 0..n_decks {
-            for &suit in SUITS.iter() {
-                for &card_name in CARD_NAMES.iter() {
+            for &suit in &suits {
+                for &card_name in &card_names {
                     deck.push(Card {
                         name: card_name.to_string(),
                         suit,
@@ -55,7 +57,7 @@ impl Deck {
                 }
             }
         }
-        let mut rng = thread_rng();
+        let mut rng = rand::thread_rng();
         deck.shuffle(&mut rng);
 
         Deck { cards: deck }
