@@ -268,7 +268,7 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
             if hand_points > dealer_points
                 || player.hands[0].has_blackjack() && !dealer_hand.has_blackjack()
             {
-                let money_earned: u32 = player.win();
+                let money_earned: u32 = player.win(i);
                 println!(
                     "{player}{} won {money}€! :)\n",
                     // If it hasn't splitted, don't show the hand's index
@@ -310,14 +310,8 @@ fn ask_if_next_game(player: &Player) -> bool {
     let player_next_game: bool;
 
     let final_balance: String = format!(
-        "{} €",
-        if player.actual_money >= player.initial_money {
-            format!("+{}", player.actual_money - player.initial_money)
-        } else {
-            // Since unsigned integers cannot be negative, I need to cast the values to i64 to avoid errors.
-            // Casting to a i32 int would cause errors if the values exceeded the i32 limit.
-            (i64::from(player.actual_money) - i64::from(player.initial_money)).to_string()
-        }
+        "{:+} €",
+        i64::from(player.actual_money) - i64::from(player.initial_money)
     );
 
     if player.actual_money > 0 {

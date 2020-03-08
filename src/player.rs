@@ -104,20 +104,30 @@ impl Player {
 
     /// Perform the corresponding operations with the player's money,
     /// return the amount of money the player wins
-    pub fn win(&mut self) -> u32 {
-        let money_before: u32 = self.actual_money;
-        self.actual_money += self.bet;
-
-        // If has a BlackJack, sums 1.5 times the actual bet, otherwise just 1 time
-        if self.hands[0].has_blackjack() {
+    pub fn win(&mut self, hand_index: usize) -> u32 {
+        let money_before = self.actual_money;
+        if self.hands.len() == 1 {
+            self.actual_money += self.bet;
+            if self.hands[hand_index].has_blackjack() {
+                self.actual_money += self.bet / 2;
+            }
+        } else {
+            // If the player has splitted, the money earned
+            // by each winning hand should be the half,
+            // since when player splitted, bet got doubled,
+            // and each half of the bet represents one hand
             self.actual_money += self.bet / 2;
-        }
-        if self.hands.get(1).map_or(false, |hand| hand.has_blackjack()) {
-            self.actual_money += self.bet / 2;
+            if self.hands[hand_index].has_blackjack() {
+                self.actual_money += self.bet / 4;
+            }
         }
         self.actual_money - money_before
     }
     pub fn lose(&mut self) {
-        self.actual_money -= self.bet;
+        if self.hands.len() == 1 {
+            self.actual_money -= self.bet;
+        } else {
+            self.actual_money -= self.bet / 2;
+        }
     }
 }
