@@ -163,18 +163,23 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
     );
     let bet: u32 = ask_player_bet(player);
     player.bet(bet);
-    let player_first_hand: &Hand = &player.hands[0];
+    let mut hand: Hand = player.hands.0.clone();
     println!(
         "\nYour cards are:\n{} and {} ({} points)\n",
-        player_first_hand.cards[0], player_first_hand.cards[1], player_first_hand.points
+        hand.cards[0], hand.cards[1], hand.points
     );
     for i in 0..2 {
         let mut has_doubled = false;
-        while !hand_win_or_lose(&player.hands[i])
+        while !hand_win_or_lose(&hand)
             // If the player has doubled, he can only ask for one more card
-            && (!has_doubled || player.hands[i].cards.len() < 3)
+            && (!has_doubled || hand.cards.len() < 3)
         {
-            if player.hands.len() > 1 {
+            if i == 0 {
+                hand = player.hands.0.clone();
+            } else {
+                hand = player.hands.1.as_ref().unwrap().clone();
+            }
+            if player.hands.1.is_some() {
                 println!("\n(Hand #{})", i + 1);
             }
             match ask_user("What do you want to do?\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender")
@@ -185,7 +190,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     player.hit(deck, i);
                     println!(
                         "Now, the cards are: {}",
-                        player.hands[i]
+                        hand
                     );
                 }
                 "s" | "stand" => {
@@ -231,7 +236,7 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                 _ => println!("Invalid command!\nAvailable Commands: (h)it, (s)tand, (sp)lit, (d)ouble, (surr)ender"),
             }
         }
-        if player.hands.len() == 1 {
+        if player.hands.1.is_none() {
             break;
         }
     }
@@ -261,18 +266,21 @@ fn dealer_turn(dealer_hand: &mut Hand, deck: &mut Deck) {
 fn end_game(players: &mut [Player], dealer_hand: &Hand) {
     println!("####### Game Finished #######\n");
     let dealer_points = dealer_hand.points;
-
     for player in players.iter_mut() {
-        for (i, hand) in player.hands.clone().iter().enumerate() {
+        let mut hand: Hand = player.hands.0.clone();
+        for i in 0..2 {
+            if i == 1 {
+                hand = player.hands.1.as_ref().unwrap().clone();
+            }
             let hand_points: u8 = hand.points;
             if hand_points > dealer_points
-                || player.hands[0].has_blackjack() && !dealer_hand.has_blackjack()
+                || player.hands.0.has_blackjack() && !dealer_hand.has_blackjack()
             {
                 let money_earned: u32 = player.win(i);
                 println!(
                     "{player}{} won {money}€! :)\n",
                     // If it hasn't splitted, don't show the hand's index
-                    if player.hands.len() == 1 {
+                    if player.hands.1.is_none() {
                         String::new()
                     } else {
                         format!(" (#{} hand)", i + 1)
@@ -283,7 +291,7 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
             } else if hand_points == 0 || hand_points < dealer_points {
                 println!(
                     "{player}{} lost! :(\n",
-                    if player.hands.len() == 1 {
+                    if player.hands.1.is_none() {
                         String::new()
                     } else {
                         format!(" (#{} hand)", i + 1)
@@ -294,7 +302,7 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
             } else {
                 println!(
                     "{player}{} tied! :|\n",
-                    if player.hands.len() == 1 {
+                    if player.hands.1.is_none() {
                         String::new()
                     } else {
                         format!(" (#{} hand)", i + 1)
