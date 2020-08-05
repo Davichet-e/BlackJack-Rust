@@ -49,6 +49,7 @@ impl Player {
         } else {
             self.hands.1.as_mut().unwrap().deal_card(deck);
         }
+        println!("{}", self.hands.0);
     }
 
     /// Double the player's bet if applicable, return an error message otherwise
@@ -119,14 +120,8 @@ impl Player {
         let money_before = self.actual_money;
         if self.hands.1.is_none() {
             self.actual_money += self.bet;
-            if hand_index == 0 {
-                if self.hands.0.has_blackjack() {
-                    self.actual_money += self.bet / 2;
-                }
-            } else {
-                if self.hands.1.as_ref().unwrap().has_blackjack() {
-                    self.actual_money += self.bet / 2;
-                }
+            if self.hands.0.has_blackjack() {
+                self.actual_money += self.bet / 2;
             }
         } else {
             // If the player has splitted, the money earned
@@ -139,7 +134,12 @@ impl Player {
                     self.actual_money += self.bet / 4;
                 }
             } else {
-                if self.hands.1.as_ref().unwrap().has_blackjack() {
+                if self
+                    .hands
+                    .1
+                    .as_ref()
+                    .map_or(false, |player| player.has_blackjack())
+                {
                     self.actual_money += self.bet / 4;
                 }
             }

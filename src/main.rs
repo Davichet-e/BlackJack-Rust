@@ -155,6 +155,14 @@ fn check_if_yes(user_decision: &str) -> bool {
     ["y", "yes", "1", "true"].contains(&user_decision.to_lowercase().trim())
 }
 
+fn get_player_hand(player: &Player, index: u8) -> Hand {
+    if index == 0 {
+        player.hands.0.clone()
+    } else {
+        player.hands.1.as_ref().unwrap().clone()
+    }
+}
+
 fn player_turn(player: &mut Player, deck: &mut Deck) {
     println!(
         "\n{player}, your actual money is {actual_money} €\n",
@@ -174,11 +182,11 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
             // If the player has doubled, he can only ask for one more card
             && (!has_doubled || hand.cards.len() < 3)
         {
-            if i == 0 {
-                hand = player.hands.0.clone();
+            hand = if i == 0 {
+                player.hands.0.clone()
             } else {
-                hand = player.hands.1.as_ref().unwrap().clone();
-            }
+                player.hands.1.as_ref().unwrap().clone()
+            };
             if player.hands.1.is_some() {
                 println!("\n(Hand #{})", i + 1);
             }
@@ -190,8 +198,9 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     player.hit(deck, i);
                     println!(
                         "Now, the cards are: {}",
-                        hand
+                        get_player_hand(player, i as u8)
                     );
+                    hand = get_player_hand(player, i as u8);
                 }
                 "s" | "stand" => {
                     println!("{} stood", player);
@@ -201,10 +210,9 @@ fn player_turn(player: &mut Player, deck: &mut Deck) {
                     if !has_doubled {
                         match player.split(deck) {
                             Some(error_message) => println!("{}", error_message),
-                            None => {
-                                println!("You have splitted the hand!\n")
-                            }
+                            None => println!("You have splitted the hand!\n")
                         }
+                        hand = get_player_hand(player, i as u8);
                     } else {
                         println!("Cannot split because you have already doubled\n");
                     }
@@ -267,15 +275,18 @@ fn end_game(players: &mut [Player], dealer_hand: &Hand) {
     println!("####### Game Finished #######\n");
     let dealer_points = dealer_hand.points;
     for player in players.iter_mut() {
-        let mut hand: Hand = player.hands.0.clone();
         for i in 0..2 {
-            if i == 1 {
-                hand = player.hands.1.as_ref().unwrap().clone();
-            }
+            let hand: &Hand = if i == 0 {
+                &player.hands.0
+            } else {
+                if let Some(hand) = &player.hands.1.as_ref() {
+                    hand
+                } else {
+                    break;
+                }
+            };
             let hand_points: u8 = hand.points;
-            if hand_points > dealer_points
-                || player.hands.0.has_blackjack() && !dealer_hand.has_blackjack()
-            {
+            if hand_points > dealer_points || hand.has_blackjack() && !dealer_hand.has_blackjack() {
                 let money_earned: u32 = player.win(i);
                 println!(
                     "{player}{} won {money}€! :)\n",
